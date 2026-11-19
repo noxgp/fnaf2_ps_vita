@@ -1,0 +1,17 @@
+# build output
+build/
+fp2
+*.o
+!third/libvita2d/libvita2d/shader/compiled/*.o
+*.velf
+*.elf
+*.vpk
+__pycache__/
+
+# game files: never commit these
+*.apk
+*.ccn
+*.pak
+fnaf2_data/
+game/
+s[0-9][0-9][0-9][0-9].wav

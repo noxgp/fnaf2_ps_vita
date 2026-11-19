@@ -1,0 +1,39 @@
+# PS Vita build:  make -f Makefile.vita   (needs VITASDK). Base VPK = engine + font only.
+# Personal all-in-one VPK:  make -f Makefile.vita DATA=path/to/game   (never share that one)
+TITLE_ID = FNAF20002
+TITLE    = FNaF 2
+DATA    ?= vpk/data
+PREFIX   = arm-vita-eabi
+CC       = $(PREFIX)-gcc
+V2D      = third/libvita2d/libvita2d
+SRC = src/load.c src/run.c src/evt.c src/ext.c src/font.c src/audio.c src/third.c src/plat_vita.c third/lz4/lib/lz4.c \
+      $(V2D)/source/vita2d.c $(V2D)/source/vita2d_texture.c $(V2D)/source/vita2d_draw.c $(V2D)/source/utils.c
+SHD = $(wildcard $(V2D)/shader/compiled/*_gxp.o)
+CFLAGS = -Wl,-q -O2 -g -std=gnu11 -ffast-math -mfpu=neon -mcpu=cortex-a9 -Wall -Wno-unused-function -Wno-misleading-indentation \
+         -Isrc -Ithird/stb -Ithird/dr_libs -Ithird/lz4/lib -I$(V2D)/include -DVITA2D_NO_FONT
+LIBS = -lSceGxm_stub -lSceDisplay_stub -lSceSysmodule_stub -lSceCommonDialog_stub -lSceAppUtil_stub -lSceAppMgr_stub \
+       -lSceTouch_stub -lSceCtrl_stub -lSceAudio_stub -lScePower_stub -lSceRtc_stub -lpthread -lm -lc
+
+all: build/fnaf2.vpk
+
+build/fnaf2.elf: $(SRC) src/fp.h
+	@mkdir -p build
+	$(CC) $(CFLAGS) -o $@ $(SRC) $(SHD) $(LIBS)
+
+build/eboot.bin: build/fnaf2.elf
+	vita-elf-create $< build/fnaf2.velf
+	vita-make-fself -c -s build/fnaf2.velf $@
+
+build/param.sfo:
+	vita-mksfoex -s TITLE_ID=$(TITLE_ID) -d ATTRIBUTE2=12 "$(TITLE)" $@
+
+build/fnaf2.vpk: build/eboot.bin build/param.sfo
+	vita-pack-vpk -s build/param.sfo -b build/eboot.bin \
+	  -a vpk/sce_sys/icon0.png=sce_sys/icon0.png \
+	  -a vpk/sce_sys/livearea/contents/bg.png=sce_sys/livearea/contents/bg.png \
+	  -a vpk/sce_sys/livearea/contents/startup.png=sce_sys/livearea/contents/startup.png \
+	  -a vpk/sce_sys/livearea/contents/template.xml=sce_sys/livearea/contents/template.xml \
+	  $(foreach f,$(wildcard $(DATA)/*.ttf $(DATA)/*.ccn $(DATA)/*.pak $(DATA)/*.wav),-a $(f)=data/$(notdir $(f))) $@
+
+clean:
+	rm -rf build
