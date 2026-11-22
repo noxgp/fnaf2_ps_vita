@@ -1,3 +1,4 @@
+#include <math.h>
 // extension objects used by FNaF 2
 #include "fp.h"
 #include <time.h>
@@ -5,7 +6,8 @@ Val exp_arg(void);
 typedef struct KV { char *g, *k, *v; } KV;
 typedef struct Ini { int n, cap; KV *e; char file[200], group[120], item[120]; int dirty; } Ini;
 typedef struct Kyso { int w, h, mode, flags, speed, back, n; short *img; int frame, counter, playing, loop, started; } Kyso;
-typedef struct Persp { int effect, dir, zoom; } Persp;
+typedef struct PSlot { int used, x, y, l, t, r, b; float sx, sy; } PSlot;
+typedef struct Persp { int effect, dir, zoom; PSlot slot[16]; } Persp;
 typedef struct Parser { char *src; char delims[16][16]; int nd; } Parser;
 typedef struct CalcR { char *text; int size, maxw, w, h; } CalcR;
 static Ini prefs; static int prefs_loaded;
@@ -174,6 +176,25 @@ void ext_act(Obj *o, Evt *a, int num) {
         else if (num == 1) { free(c->text); c->text = strdup(eval_str(&a->p[0])); }
         else if (num == 2) c->maxw = eval_int(&a->p[0]);
         else if (num == 3) font_render(c->size, c->text ? c->text : "", 0, 0, 0, 0, &c->w, &c->h, 1, c->maxw);
+        return; }
+    case XK_PERSP: { Persp *p = o->ext; if (!p) return;
+        if (num == 22 && a->np >= 9) { // add coordinates: slot, x, y, left, top, right, bottom, scale x, scale y
+            int sl = eval_int(&a->p[0]); if (sl < 0 || sl > 15) return; PSlot *q = &p->slot[sl];
+            q->x = eval_int(&a->p[1]); q->y = eval_int(&a->p[2]); q->l = eval_int(&a->p[3]); q->t = eval_int(&a->p[4]); q->r = eval_int(&a->p[5]); q->b = eval_int(&a->p[6]);
+            Val v = eval_param(&a->p[7]); q->sx = (float)vd(&v); v = eval_param(&a->p[8]); q->sy = (float)vd(&v); q->used = 1; return; }
+        if (num == 26 && a->np >= 3) { // apply to object: moves/scales objects placed on the panorama so they match the warped picture
+            int sl = eval_int(&a->p[0]), mode = eval_int(&a->p[2]); if (sl < 0 || sl > 15 || !p->slot[sl].used) return; PSlot *q = &p->slot[sl];
+            int px = q->x, py = q->y; double sy = 1.0;
+            if (p->effect == 0 && p->dir == 0 && o->w > 0) {
+                double W = o->w, H = o->h, Z = p->zoom, d2 = W / 3.1415;
+                #define PF(xx) (H / fmax(1.0, (sin((float)((double)(xx) / d2 + 1.57075)) * Z + H) - Z))
+                double fl = PF((q->l - o->x) - (int)(W / 2)), fr = PF((q->r - o->x) - (int)(W / 2));
+                sy = mode == 1 ? fmax(fl, fr) : mode == 2 ? (fl + fr) / 2 : fmin(fl, fr);
+                int hh = (int)H / 2; py = o->y + (int)(PF((double)(q->x - o->x) - W / 2.0) * (double)((q->y - o->y) - hh)) + hh;
+                #undef PF
+            }
+            for (Obj *t = evt_first(a->p[1].s[0], (uint16_t)a->p[1].s[1]); t; t = evt_next()) { t->x = px; t->y = py; t->sx = q->sx; t->sy = (float)(sy * q->sy); }
+            return; }
         return; }
     case XK_ANDROIDPLUS:
         if (num == 10 && a->np >= 2) { prefs_init(); char k[120]; snprintf(k, sizeof k, "%s", eval_str(&a->p[0])); ini_set(&prefs, "prefs", k, eval_str(&a->p[1])); }

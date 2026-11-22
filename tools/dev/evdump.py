@@ -1,5 +1,5 @@
-import sys
-sys.path.insert(0,'/home/claude/tools')
+import sys, os
+sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
 from fusion import *
 app=load_app(sys.argv[1]); f=load_frame(app,int(sys.argv[2])); lo=int(sys.argv[3]); hi=int(sys.argv[4])
 def tn(t): return TYPES.get(t) or app['exts'].get(t-32,str(t))[:8]

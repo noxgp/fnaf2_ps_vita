@@ -97,5 +97,5 @@ make                         # ./fp2 <datadir> [commands]: headless Linux test b
 
 ## Credits
 
-- Port by **Nox**, developed with the help of Claude (Anthropic).
+- Port by **Nox**.
 - *Five Nights at Freddy's 2* © Scott Cawthon. This is a non-commercial fan project, not affiliated with or endorsed by Scott Cawthon or Clickteam. Please buy the game.
