@@ -1,0 +1,4 @@
+numpy
+pillow
+lz4
+imagequant

@@ -7,7 +7,8 @@ Creates <output_dir>/game (default: ./fnaf2_data/game). Copy that 'game' folder 
 ux0:data/fnaf2/game on your Vita. Optional:  --vpk base.vpk  also writes a single
 FNaF2_Vita_full.vpk with the data packed inside (bigger install, nothing to copy).
 
-Needs: Python 3.8+, ffmpeg on PATH, and  pip install numpy pillow lz4 imagequant
+Needs: Python 3.8+, ffmpeg, and  pip install -r requirements.txt
+ffmpeg is found on PATH, next to this script, or with --ffmpeg /path/to/ffmpeg
 """
 import os, sys, shutil, subprocess, tempfile, zipfile, argparse, glob
 
@@ -22,10 +23,19 @@ def die(msg):
 def main():
     ap = argparse.ArgumentParser(description=__doc__, formatter_class=argparse.RawDescriptionHelpFormatter)
     ap.add_argument('apk'); ap.add_argument('out', nargs='?', default='fnaf2_data')
+    ap.add_argument('--ffmpeg', help='path to ffmpeg (default: next to this script, then PATH)')
     ap.add_argument('--vpk', help='base VPK from the GitHub release; writes FNaF2_Vita_full.vpk with the data inside')
     a = ap.parse_args()
 
-    if not shutil.which('ffmpeg'): die('ffmpeg not found on PATH (https://ffmpeg.org/download.html)')
+    ff = a.ffmpeg
+    if not ff:
+        for cand in (os.path.join(HERE, 'ffmpeg.exe'), os.path.join(HERE, 'ffmpeg')):
+            if os.path.isfile(cand): ff = cand; break
+    ff = ff or shutil.which('ffmpeg')
+    if not ff or not (os.path.isfile(ff) or shutil.which(ff)):
+        die('ffmpeg not found. Install it (Windows: winget install ffmpeg | macOS: brew install ffmpeg | Linux: sudo apt install ffmpeg),\n'
+            '       put ffmpeg next to this script, or pass --ffmpeg /path/to/ffmpeg')
+    if not os.path.isfile(a.apk): die('APK not found: %s' % a.apk)
     try:
         import mkpack
     except ImportError as e:
@@ -53,7 +63,7 @@ def main():
             else:
                 src = os.path.join(tmp, b)
                 with open(src, 'wb') as f: f.write(z.read(n))
-                subprocess.run(['ffmpeg', '-v', 'error', '-y', '-i', src, '-c:a', 'adpcm_ima_wav', dst], check=True)
+                subprocess.run([ff, '-v', 'error', '-y', '-i', src, '-c:a', 'adpcm_ima_wav', dst], check=True)
     finally:
         shutil.rmtree(tmp, ignore_errors=True)
 

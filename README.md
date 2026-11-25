@@ -32,25 +32,26 @@ Everything else works with the touch screen, like on Android.
 
 ## Installation
 
-You need a Vita with HENkaku/Ensō and VitaShell. You also need a PC with Python 3.8+ and ffmpeg.
+You need a Vita with HENkaku/Ensō and VitaShell, plus a PC with **Python 3.8+** and **ffmpeg**. Windows, macOS and Linux all work.
 
 1. **Get the APK.** Use the FNaF 2 Android APK version 2.0.6 from your own purchase.
-2. **Build the game data on your PC.**
-   ```
-   pip install numpy pillow lz4 imagequant
-   python tools/build_data.py fnaf2.apk
-   ```
-   This creates `fnaf2_data/game/` (about 90 MB) and takes a minute or two. `ffmpeg` must be on your PATH.
-3. **Copy the data to the Vita.** Copy the `game` folder to `ux0:data/fnaf2/`, so you end up with `ux0:data/fnaf2/game/application.ccn`.
-4. **Install the VPK.** Install `FNaF2_Vita.vpk` from the [Releases](../../releases) page with VitaShell.
+2. **Build the game data on your PC.** Download `FNaF2_Vita_DataTool.zip` from [Releases](../../releases) and extract it. (The same files are in `tools/` here.)
+
+   | System | Install Python + ffmpeg | Run |
+   |---|---|---|
+   | **Windows** | Python from [python.org](https://www.python.org/downloads/) (tick *Add python.exe to PATH*), then `winget install ffmpeg` | Drag the APK onto `Prepare-Game-Data.cmd` |
+   | **macOS** | `brew install python ffmpeg` | `./prepare-game-data.sh fnaf2.apk` |
+   | **Linux** | `sudo apt install python3 python3-venv ffmpeg` (or your distro's equivalent) | `./prepare-game-data.sh fnaf2.apk` |
+
+   The script installs the Python packages it needs (on macOS/Linux into a private `.venv` folder) and creates `fnaf2_data/game/` (about 90 MB) in a minute or two. If ffmpeg isn't on your PATH, put `ffmpeg`/`ffmpeg.exe` next to the script or pass `--ffmpeg /path/to/ffmpeg`.
+
+   Manual alternative on any system: `pip install -r requirements.txt` then `python build_data.py fnaf2.apk`.
+3. **Copy the data to the Vita.** Copy the `game` folder to `ux0:data/fnaf2/`, so you end up with `ux0:data/fnaf2/game/application.ccn`. Watch out for a nested `game/game` folder.
+4. **Install the VPK.** Install `FNaF2_Vita_v1.vpk` from the [Releases](../../releases) page with VitaShell.
 
 If the game says *"Game data not found"*, check the folder path from step 3.
 
-**Optional: a single VPK.** If you'd rather install one file instead of copying a folder, run:
-```
-python tools/build_data.py fnaf2.apk --vpk FNaF2_Vita.vpk
-```
-This also writes `fnaf2_data/FNaF2_Vita_full.vpk` with the data inside. Keep it for yourself. Don't share it, because it contains the game's files.
+The generated `game` folder contains the game's files. Keep it for yourself and don't share it.
 
 ## Known limitations
 
@@ -82,7 +83,7 @@ make                         # ./fp2 <datadir> [commands]: headless Linux test b
 | `src/font.c` | Text rendering (stb_truetype) |
 | `src/plat_vita.c` | Vita backend: vita2d, GPU memory pool, input mapping, audio thread |
 | `src/plat_soft.c` | Headless Linux backend for testing |
-| `tools/build_data.py` | APK → Vita data: 8-bit palettized LZ4 texture pack, ADPCM audio |
+| `tools/build_data.py` | APK → Vita data: 8-bit palettized LZ4 texture pack, ADPCM audio (`Prepare-Game-Data.cmd` / `prepare-game-data.sh` wrap it) |
 | `tools/dev/` | Analysis scripts: `evdump.py` dumps a frame's events in readable form |
 
 ### Third-party code
