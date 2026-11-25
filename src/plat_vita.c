@@ -254,6 +254,8 @@ int main(void) {
     sceTouchSetSamplingState(SCE_TOUCH_PORT_FRONT, SCE_TOUCH_SAMPLING_STATE_START);
     sceCtrlSetSamplingMode(SCE_CTRL_MODE_ANALOG);
     G.rng = (unsigned)sceKernelGetProcessTimeWide();
+    // panorama render target: allocate it before the texture pool takes the video memory, otherwise it silently fails
+    rt = vita2d_create_empty_texture_rendertarget(SCR_W, SCR_H, SCE_GXM_TEXTURE_FORMAT_A8B8G8R8);
     pool_add(SCE_KERNEL_MEMBLOCK_TYPE_USER_CDRAM_RW, 88u << 20);
     pool_add(SCE_KERNEL_MEMBLOCK_TYPE_USER_RW_UNCACHE, 48u << 20);
     font_init("app0:data/font.ttf");
@@ -262,7 +264,7 @@ int main(void) {
     snprintf(G.savedir, sizeof G.savedir, "ux0:data/fnaf2/save");
     S = (float)SCR_H / G.h; if (G.w * S > SCR_W) S = (float)SCR_W / G.w;
     rtW = (int)(G.w * S + 0.5f); rtH = (int)(G.h * S + 0.5f);
-    rt = vita2d_create_empty_texture_rendertarget(rtW, rtH, SCE_GXM_TEXTURE_FORMAT_A8B8G8R8);
+    if (!rt) logf_("panorama render target could not be created");
     cache_set_budget(poolTotal - (12L << 20));
     snd_init(); snd_preload_all();
     SceUID ath = sceKernelCreateThread("fp2_audio", audio_thread, 0x10000100 - 10, 256 * 1024, 0, SCE_KERNEL_CPU_MASK_USER_1, NULL);
