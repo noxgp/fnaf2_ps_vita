@@ -186,7 +186,7 @@ static void eval_tok(Tok *t) {
             if (a.t == 1 || b.t == 1) { double x = vd(&a), y = vd(&b); R[pp] = VD(mx ? (x > y ? x : y) : (x < y ? x : y)); }
             else { int x = vi(&a), y = vi(&b); R[pp] = VI(mx ? (x > y ? x : y) : (x < y ? x : y)); }
             return; }
-        case 46: { Val v = arg(); Loop *l = find_loop(lower(vs(&v)), 0); R[pp] = VI(l ? l->index : 0); return; }
+        case 46: { Val v = arg(); char ib[16]; if (v.t != 2) snprintf(ib, sizeof ib, "#%d", vi(&v)); Loop *l = find_loop(v.t != 2 ? ib : lower(vs(&v)), 0); R[pp] = VI(l ? l->index : 0); return; }
         case 47: *r = VS("\r\n"); return;
         case 50: *r = VS(""); return;
         case 59: { Val a = arg(); Val b = arg(); R[pp] = VD(atan2(vd(&a), vd(&b)) * 180.0 / 3.141592653589793); return; }
@@ -338,9 +338,17 @@ static int cond_collide(Evt *c) {
     if (!neg && cnt) { idx = 0; o = evt_first(p->s[0], (uint16_t)p->s[1]); while (o) { if (idx < nb && !kb[idx]) evt_delete_current(); idx++; o = evt_next(); } }
     return cnt > 0;
 }
+// newer Fusion builds (FNaF 2 v2.0.7) reference fast loops / for-each loops by index instead of by name
+static int is_expr_code(int c) { return c == 22 || c == 23 || c == 27 || c == 28 || c == 45 || c == 46 || c == 52 || c == 53 || c == 54 || c == 59 || c == 62; }
+static const char *loop_name(Param *p) {
+    static char b[4][16]; static int k;
+    if (p->code == 11 || (p->cmp > 0 && is_expr_code(p->code))) { k = (k + 1) & 3; snprintf(b[k], 16, "#%d", p->code == 11 ? p->a : p->cmp); return b[k]; }
+    return lower(eval_str(p));
+}
 static const char *cname(Evt *c) { // constant-name cache for loop/event names
     if (c->name) return c->name;
     Param *p = &c->p[0];
+    if (p->code == 11 || (p->cmp > 0 && is_expr_code(p->code))) { char *n = fa(16); snprintf(n, 16, "#%d", p->code == 11 ? p->a : p->cmp); return c->name = n; } // indexed loops (newer Fusion builds)
     if (p->ntok == 2 && p->tok[0].type == -1 && p->tok[0].num == 3) { char *s = fa(strlen(p->tok[0].s) + 1); strcpy(s, p->tok[0].s); for (char *q = s; *q; q++) *q = (char)tolower((unsigned char)*q); return c->name = s; }
     return lower(eval_str(p));
 }
@@ -485,7 +493,7 @@ static void exec_act(Evt *a) {
         case 6: if (a->p[0].a >= 0) grp_set(a->p[0].a, 1); return;
         case 7: if (a->p[0].a >= 0) grp_set(a->p[0].a, 0); return;
         case 14: {
-            const char *nm = lower(eval_str(&a->p[0])); int cnt = eval_int(&a->p[1]); if (!*nm) return;
+            const char *nm = loop_name(&a->p[0]); int cnt = eval_int(&a->p[1]); if (!*nm) return;
             Loop *l = find_loop(nm, 1); if (!l) return; l->stop = 0; int inf = cnt < 0;
             const char *sl = curLoop; int sal = actLoop, salc = actLoopCount; Group *sg = curG; Tok *sct = ct; int spp = pp; Param *scp = childParam; int li = (int)(l - loops);
             char nmc[80]; snprintf(nmc, sizeof nmc, "%s", nm);
@@ -494,7 +502,7 @@ static void exec_act(Evt *a) {
                 if (l->stop) break; if (inf && l->index > 100000) break;
             }
             curLoop = sl; actLoop = sal; actLoopCount = salc; curG = sg; ct = sct; pp = spp; childParam = scp; actOn = 1; return; }
-        case 15: { Loop *l = find_loop(lower(eval_str(&a->p[0])), 0); if (l) l->stop = 1; return; }
+        case 15: { Loop *l = find_loop(loop_name(&a->p[0]), 0); if (l) l->stop = 1; return; }
         case 43: childParam = &a->p[0]; return;
     }
     else if (ty == -4 && n == 1) { add_timer_event(a->p[0].tok ? eval_int(&a->p[0]) : a->p[0].a, eval_str(&a->p[1])); return; }
@@ -563,7 +571,7 @@ static void exec_act(Evt *a) {
         case 65: { int v = 255 - eval_int(&a->p[0]); if (v < 0) v = 0; if (v > 255) v = 255;
             int rgb = (o->effect & 0x1000) ? (o->effparam & 0xFFFFFF) : 0xFFFFFF; int bop = o->effect & 0xFFF;
             o->effect = 0x1000 | (bop == 1 ? 0 : bop); o->effparam = rgb | (v << 24); return; }
-        case 76: { const char *nm = ta_dup(eval_str(&a->p[0])); FE *f = NULL;
+        case 76: { const char *nm = ta_dup(loop_name(&a->p[0])); FE *f = NULL;
             for (int i = 0; i < nfe; i++) if (!strcasecmp(fes[i].name, nm)) f = &fes[i];
             if (!f) { if (nfe >= 16) return; f = &fes[nfe++]; f->name = nm; f->n = 0; f->o = (Obj **)ta(sizeof(Obj *) * MAXOBJ); }
             if (f->n < MAXOBJ) f->o[f->n++] = o; return; }

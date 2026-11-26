@@ -78,7 +78,7 @@ typedef struct Game {
     int nimg; ImgInfo *img;      // indexed by handle
     int nsnd; char **sndname;
     int nef; EFile *ef;
-    int next_n; char **extname;
+    int next_n; char **extname; int newfmt; // newfmt: newer Fusion build (FNaF 2 v2.0.7): handles obfuscated, extension names omitted
     uint8_t **frdata; int *frsize; short *frhandle; int nfrh;
     FontDef font[64];
     // frame

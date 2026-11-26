@@ -1,6 +1,6 @@
 # FNaF 2 for PS Vita
 
-An unofficial PS Vita port of **Five Nights at Freddy's 2** (Android version 2.0.6).
+An unofficial PS Vita port of **Five Nights at Freddy's 2** (Android version 2.0.7, also works with 2.0.6).
 
 It is not an emulator or a transpiler. It is a Clickteam Fusion runtime written from scratch in C. It loads the original game data from the Android APK and runs the game's events, animations, movements and collisions the way the official runtime does. Rendering uses vita2d on the GPU, and audio goes through a custom mixer.
 
@@ -34,7 +34,14 @@ Everything else works with the touch screen, like on Android.
 
 You need a Vita with HENkaku/Ensō and VitaShell, plus a PC with **Python 3.8+** and **ffmpeg**. Windows, macOS and Linux all work.
 
-1. **Get the APK.** Use the FNaF 2 Android APK version 2.0.6 from your own purchase.
+1. **Get the APK.** Use the FNaF 2 Android APK from your own purchase.
+
+   | Version | Status |
+   |---|---|
+   | **2.0.7** | ✅ Recommended (latest) |
+   | 2.0.6 | ✅ Supported |
+   | Other | ⚠️ Untested. The Data Tool builds it with a warning. Please report problems with your version number. |
+
 2. **Build the game data on your PC.** Download `FNaF2_Vita_DataTool.zip` from [Releases](../../releases) and extract it. (The same files are in `tools/` here.)
 
    | System | Install Python + ffmpeg | Run |

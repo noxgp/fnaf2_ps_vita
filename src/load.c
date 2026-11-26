@@ -192,6 +192,10 @@ int app_load(const char *dir) {
                 if (hd >= 0 && hd < 64) G.extname[hd] = rstr(&r, pa);
                 r.p = st + s;
             }
+            if (n == 0) { G.newfmt = 1; // newer Fusion builds (FNaF 2 v2.0.7) leave the list empty; the names are compiled into the Android runtime
+                static const char *def[16] = {"Perspective", "kcini", "kcclock", "Kyso", "CalcRect", NULL, "iOSStore", "InAppAndroid", "Android", "iOS", "iOSPlus", "AndroidPlus", "kclist", "parser", "MultipleTouch", "Layer"};
+                for (int i = 0; i < 16; i++) G.extname[i] = (char *)def[i];
+            }
             free(b);
         } else if (id == 0x2229) {
             uint8_t *b = readchunk(data, sz); Rd r = {b}; int n = r32(&r);
@@ -201,7 +205,7 @@ int app_load(const char *dir) {
                 for (;;) {
                     int cid = ru16(&r); ru16(&r); int cs = r32(&r); const uint8_t *cp = r.p; r.p += cs;
                     if (cid == 0x4444) {
-                        Rd c = {cp}; int hd = r16(&c);
+                        Rd c = {cp}; int hd = r16(&c); if (G.newfmt) hd = (short)(hd ^ 28);
                         if (hd < 0 || hd >= G.noi) { logf_("oi handle %d out of range", hd); continue; }
                         o = &G.oi[hd]; o->handle = hd; o->type = r16(&c); o->flags = ru16(&c); c.p += 2; o->ink = r32(&c); o->inkparam = r32(&c); o->exists = 1; o->first = -1;
                     } else if (cid == 0x4445 && o) { Rd c = {cp}; o->name = rstr(&c, pa); }
@@ -340,7 +344,7 @@ int frame_parse(int idx) {
         else if (id == 0x3335) G.fname = rstr(&c, fa);
         else if (id == 0x3338) {
             G.nlo = r32(&c); G.lo = fa(sizeof(LO) * (G.nlo + 1));
-            for (int i = 0; i < G.nlo; i++) { LO *l = &G.lo[i]; l->handle = r16(&c); l->oi = r16(&c); l->x = r32(&c); l->y = r32(&c); l->ptype = r16(&c); l->value = r16(&c); l->layer = r16(&c); c.p += 2; }
+            for (int i = 0; i < G.nlo; i++) { LO *l = &G.lo[i]; l->handle = r16(&c); l->oi = r16(&c); if (G.newfmt) l->oi = (short)(l->oi ^ 48); l->x = r32(&c); l->y = r32(&c); l->ptype = r16(&c); l->value = r16(&c); l->layer = r16(&c); c.p += 2; }
         } else if (id == 0x3341) {
             G.nlayer = r32(&c); G.layer = fa(sizeof(Layer) * (G.nlayer + 1));
             for (int i = 0; i < G.nlayer; i++) { Layer *l = &G.layer[i]; l->opt = r32(&c); l->xc = r32(&c) / 65536.0f; l->yc = r32(&c) / 65536.0f; l->nbkd = r32(&c); l->first = r32(&c); l->name = rstr(&c, fa); l->hidden = !(l->opt & 0x10); }

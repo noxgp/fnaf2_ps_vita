@@ -22,7 +22,7 @@ int ext_kind(const char *nm) {
     if (!strncasecmp(nm, "parser", 6)) return XK_PARSER;
     if (!strncasecmp(nm, "MultipleTouch", 13)) return XK_TOUCH;
     if (!strncasecmp(nm, "AndroidPlus", 11)) return XK_ANDROIDPLUS;
-    if (!strncasecmp(nm, "Android.", 8)) return XK_ANDROID;
+    if (!strncasecmp(nm, "Android.", 8) || !strcasecmp(nm, "Android")) return XK_ANDROID;
     return XK_STUB;
 }
 // ---- ini ----
