@@ -54,11 +54,23 @@ You need a Vita with HENkaku/Ensō and VitaShell, plus a PC with **Python 3.8+**
 
    Manual alternative on any system: `pip install -r requirements.txt` then `python build_data.py fnaf2.apk`.
 3. **Copy the data to the Vita.** Copy the `game` folder to `ux0:data/fnaf2/`, so you end up with `ux0:data/fnaf2/game/application.ccn`. Watch out for a nested `game/game` folder.
-4. **Install the VPK.** Install `FNaF2_Vita_v1.vpk` from the [Releases](../../releases) page with VitaShell.
+4. **Install the VPK.** Install the latest `FNaF2_Vita_v*.vpk` from the [Releases](../../releases) page with VitaShell.
 
 If the game says *"Game data not found"*, check the folder path from step 3.
 
 The generated `game` folder contains the game's files. Keep it for yourself and don't share it.
+
+## Changelog
+
+**v1.0.1**
+- Support for FNaF 2 **v2.0.7** (latest Android version). Fixes a black screen with only "No" and the copyright text when the data was built from a 2.0.7 APK.
+- Data Tool detects the APK version: 2.0.7 recommended, 2.0.6 supported, other versions build with a warning.
+- Data Tool runs on Windows, macOS and Linux (`Prepare-Game-Data.cmd` / `prepare-game-data.sh`).
+- Panorama (perspective) effect in the office now works on the Vita.
+- Touch areas in the office follow the panorama view.
+
+**v1.0**
+- First release.
 
 ## Known limitations
 

@@ -1,6 +1,7 @@
 # PS Vita build:  make -f Makefile.vita   (needs VITASDK). Base VPK = engine + font only.
 # Personal all-in-one VPK:  make -f Makefile.vita DATA=path/to/game   (never share that one)
 TITLE_ID = FNAF20002
+APP_VER  = 01.01
 TITLE    = Five Nights at Freddy's 2
 DATA    ?= vpk/data
 PREFIX   = arm-vita-eabi
@@ -25,7 +26,7 @@ build/eboot.bin: build/fnaf2.elf
 	vita-make-fself -c -s build/fnaf2.velf $@
 
 build/param.sfo:
-	vita-mksfoex -s TITLE_ID=$(TITLE_ID) -d ATTRIBUTE2=12 "$(TITLE)" $@
+	vita-mksfoex -s TITLE_ID=$(TITLE_ID) -s APP_VER=$(APP_VER) -d ATTRIBUTE2=12 "$(TITLE)" $@
 
 build/fnaf2.vpk: build/eboot.bin build/param.sfo
 	vita-pack-vpk -s build/param.sfo -b build/eboot.bin \
