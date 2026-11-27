@@ -68,6 +68,7 @@ The generated `game` folder contains the game's files. Keep it for yourself and 
 - Options > Joystick Size now also changes how far the arrow buttons push the minigame joystick.
 - Start/Select only mutes the phone call while the mute button is on screen (it no longer turns the view left).
 - Subtitle text is drawn in front of its dark background again.
+- Mask: Toy Bonnie now stays in the office while you wear the mask (the screen flickers dark) and leaves after a few seconds. Before, he vanished instantly.
 
 **v1.0.1**
 - Support for FNaF 2 **v2.0.7** (latest Android version). Fixes a black screen with only "No" and the copyright text when the data was built from a 2.0.7 APK.

@@ -279,7 +279,7 @@ static int overlap(Obj *a, Obj *b) {
     for (int y = y0; y < y1; y++) for (int x = x0; x < x1; x++) if (solid_at(a, x, y, ia, ma) && solid_at(b, x, y, ib, mb)) return 1;
     return 0;
 }
-enum { F_BACK, F_NEAR, F_FRAMEC, F_ANIM, F_COLL, F_CMPX, F_CMPY, F_FLAG, F_FIXED, F_VAR, F_HIDDEN, F_STR, F_MOUSE, F_COUNTER, F_MV, F_TRUE, F_EXT, F_TOUCH };
+enum { F_BACK, F_NEAR, F_FRAMEC, F_ANIM, F_COLL, F_CMPX, F_CMPY, F_FLAG, F_FIXED, F_VAR, F_HIDDEN, F_STR, F_MOUSE, F_COUNTER, F_MV, F_TRUE, F_EXT, F_TOUCH, F_STOPPED };
 static int filter(Evt *c, int kind, Val *v, int k) {
     Obj *o = evt_first(c->oil, c->oi); int n = evt_nsel, neg = NEG(c);
     if (!o) return 0;
@@ -314,6 +314,7 @@ static int filter(Evt *c, int kind, Val *v, int k) {
         case F_COUNTER: r = cmp_val(&o->cv, v, k); break;
         case F_MV: r = multivar((MultiVar *)v, o); break;
         case F_TRUE: r = 1; break;
+        case F_STOPPED: r = (o->mv ? o->mtSpeed : o->ball ? o->bspeed : 0) == 0; break; // CND_EXTSTOPPED: speed is 0
         case F_EXT: r = ext_cond(o, c, k); break;
         case F_TOUCH: r = touch_over(o, k); break;
         }
@@ -433,7 +434,7 @@ static int eval_cond(Evt *c, Obj *to, int first) {
         case -22: return filter(c, F_NEAR, NULL, c->p[0].tok ? eval_int(&c->p[0]) : c->p[0].a);
         case -3: return filter(c, F_ANIM, NULL, c->p[0].a);
         case -4: return cond_collide(c);
-        case -7: return filter(c, F_TRUE, NULL, 0);
+        case -7: return filter(c, F_STOPPED, NULL, 0); // object has stopped moving
         case -16: case -17: { Val v = eval_param(&c->p[0]); return filter(c, n == -17 ? F_CMPX : F_CMPY, &v, c->p[0].cmp); }
         case -24: case -25: {
             if (c->p[0].code == 68) return filter(c, F_MV, (Val *)c->p[0].ptr, 0);
