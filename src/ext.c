@@ -196,6 +196,9 @@ void ext_act(Obj *o, Evt *a, int num) {
             for (Obj *t = evt_first(a->p[1].s[0], (uint16_t)a->p[1].s[1]); t; t = evt_next()) { t->x = px; t->y = py; t->sx = q->sx; t->sy = (float)(sy * q->sy); }
             return; }
         return; }
+    case XK_ANDROID:
+        if (num == 12 && a->np >= 1) plat_vibrate(eval_int(&a->p[0])); // Options > Vibrations (the game checks the setting itself)
+        return;
     case XK_ANDROIDPLUS:
         if (num == 10 && a->np >= 2) { prefs_init(); char k[120]; snprintf(k, sizeof k, "%s", eval_str(&a->p[0])); ini_set(&prefs, "prefs", k, eval_str(&a->p[1])); }
         return;

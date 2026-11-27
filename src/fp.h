@@ -141,5 +141,6 @@ void plat_begin(int offscreen); void plat_present(void); void plat_clear(unsigne
 void plat_quad(struct Tex *t, float u0, float v0, float u1, float v1, const float *xy, unsigned rgba, int blend);
 void plat_rect(float x, float y, float w, float h, unsigned rgba);
 void plat_persp(float x, float y, float w, float h, float fb);
+void plat_vibrate(int ms);
 unsigned plat_ms(void);
 #endif

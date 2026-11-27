@@ -133,7 +133,17 @@ void plat_persp(float x, float y, float w, float h, float fb) {
     clip_game();
     vita2d_draw_array_textured(rt, SCE_GXM_PRIMITIVE_TRIANGLE_STRIP, v, (N + 1) * 2, RGBA8(255, 255, 255, 255));
 }
-void plat_present(void) { if (inRT) plat_persp(0, 0, G.w, G.h, 0); vita2d_end_drawing(); vita2d_swap_buffers(); drawing = 0;
+// rumble: works with a DualShock on PlayStation TV; the handheld Vita has no motor, so the call does nothing there
+static uint64_t rumbleEnd;
+void plat_vibrate(int ms) {
+    if (ms <= 0) return; SceCtrlActuator act; memset(&act, 0, sizeof act); act.small = 1; act.large = 200;
+    for (int port = 1; port <= 4; port++) sceCtrlSetActuator(port, &act);
+    rumbleEnd = sceKernelGetProcessTimeWide() + (uint64_t)ms * 1000;
+}
+static void rumble_tick(void) {
+    if (rumbleEnd && sceKernelGetProcessTimeWide() >= rumbleEnd) { SceCtrlActuator act; memset(&act, 0, sizeof act); for (int port = 1; port <= 4; port++) sceCtrlSetActuator(port, &act); rumbleEnd = 0; }
+}
+void plat_present(void) { rumble_tick(); if (inRT) plat_persp(0, 0, G.w, G.h, 0); vita2d_end_drawing(); vita2d_swap_buffers(); drawing = 0;
     accDraw += (sceKernelGetProcessTimeWide() - tDraw0) / 1000.0; nFrames++; }
 unsigned plat_ms(void) { return (unsigned)(sceKernelGetProcessTimeWide() / 1000); }
 
@@ -210,7 +220,8 @@ static void read_input(unsigned *prevButtons) {
     { static int vjOn; Touch *t = &G.in.t[5]; int cx, cy; Obj *vj = find_obj("vjoy_dpad");
       int dx = ((b & SCE_CTRL_RIGHT) ? 1 : 0) - ((b & SCE_CTRL_LEFT) ? 1 : 0), dy = ((b & SCE_CTRL_DOWN) ? 1 : 0) - ((b & SCE_CTRL_UP) ? 1 : 0);
       if (G.fi != 3 && vj && !vj->hidden && (dx || dy) && obj_screen_pos("vjoy_dpad", &cx, &cy)) {
-          if (!t->down) t->isnew = 1; t->down = 1; t->x = cx + dx * 64; t->y = cy + dy * 64; t->owner = 98; vjOn = 1;
+          if (!t->down) t->isnew = 1; t->down = 1; int rad = 64; if (G.ngv > 19 && G.gv[19].t != 2) { int js = vi(&G.gv[19]); if (js >= 40 && js <= 200) rad = 64 * js / 100; } // follows Options > Joystick Size (100 = default)
+          t->x = cx + dx * rad; t->y = cy + dy * rad; t->owner = 98; vjOn = 1;
       } else if (vjOn) { vjOn = 0; if (t->down && t->owner == 98) { t->down = 0; t->ended = 1; t->owner = 0; } }
       if (G.fi != 3) { *prevButtons = b; return; } }
     // a short tap on slot 4 releases by itself

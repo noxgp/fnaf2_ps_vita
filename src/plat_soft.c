@@ -22,6 +22,7 @@ struct Tex *plat_tex(int w, int h, int fmt, const uint8_t *px, int stride) {
 void plat_tex_free(struct Tex *t) { if (t) { free(t->px); free(t); } }
 void plat_begin(int off) { (void)off; if (!fb) { FW = G.w; FH = G.h; fb = malloc((size_t)FW * FH * 4); } }
 void plat_present(void) {}
+void plat_vibrate(int ms) { (void)ms; }
 void plat_clear(unsigned rgb) { for (int i = 0; i < FW * FH; i++) { fb[i * 4] = rgb >> 16; fb[i * 4 + 1] = rgb >> 8; fb[i * 4 + 2] = rgb; fb[i * 4 + 3] = 255; } }
 void plat_rect(float x, float y, float w, float h, unsigned rgba) {
     int x0 = (int)x, y0 = (int)y, x1 = (int)(x + w), y1 = (int)(y + h); if (x0 < 0) x0 = 0; if (y0 < 0) y0 = 0; if (x1 > FW) x1 = FW; if (y1 > FH) y1 = FH;
@@ -73,6 +74,9 @@ int main(int argc, char **argv) {
         else if (!strcmp(c, "m") && i + 2 < argc) { G.in.t[0].x = atoi(argv[i + 1]); G.in.t[0].y = atoi(argv[i + 2]); i += 2; }
         else if (!strcmp(c, "D") && i + 3 < argc) { int s = atoi(argv[i + 1]); G.in.t[s].down = 1; G.in.t[s].isnew = 1; G.in.t[s].x = atoi(argv[i + 2]); G.in.t[s].y = atoi(argv[i + 3]); i += 3; }
         else if (!strcmp(c, "U") && i + 1 < argc) { int s = atoi(argv[++i]); G.in.t[s].down = 0; G.in.t[s].ended = 1; }
+        else if (!strcmp(c, "P") && i + 3 < argc) { int h = atoi(argv[i + 1]); for (int k = 0; k < G.nobjslots; k++) { Obj *o = G.obj[k]; if (o && !o->dead && o->oi && o->oi->handle == h) { o->x = atoi(argv[i + 2]); o->y = atoi(argv[i + 3]); } } i += 3; }
+        else if (!strcmp(c, "K") && i + 1 < argc) { int h = atoi(argv[++i]); for (int k = 0; k < G.nobjslots; k++) { Obj *o = G.obj[k]; if (o && !o->dead && o->oi->handle == h) { o->x = 0; o->y = 0; o->hidden = 0; Evt fa; memset(&fa, 0, sizeof fa); ext_act(o, &fa, 1); } } }
+        else if (!strcmp(c, "A") && i + 3 < argc) { int h = atoi(argv[i + 1]), ix = atoi(argv[i + 2]), v = atoi(argv[i + 3]); for (int k = 0; k < G.nobjslots; k++) { Obj *o = G.obj[k]; if (o && !o->dead && o->oi->handle == h && ix < o->nval) o->val[ix] = VI(v); } i += 3; }
         else if (!strcmp(c, "u")) { G.in.t[0].down = 0; G.in.t[0].ended = 1; }
         else if (!strcmp(c, "c") && i + 2 < argc) { G.in.t[0].down = 1; G.in.t[0].isnew = 1; G.in.t[0].x = atoi(argv[i + 1]); G.in.t[0].y = atoi(argv[i + 2]); i += 2; tick(3); G.in.t[0].down = 0; G.in.t[0].ended = 1; tick(2); }
         else if (!strcmp(c, "s") && i + 1 < argc) { frame_draw(); stbi_write_png(argv[++i], FW, FH, 4, fb, FW * 4); }
