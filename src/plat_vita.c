@@ -87,7 +87,9 @@ struct Tex *plat_tex(int w, int h, int fmt, const uint8_t *px, int stride) {
 
 // ---------------- drawing ----------------
 static float S, SX, OX, OY; static int inRT; static vita2d_texture *rt; static int rtW, rtH, curBlend = -1;
-static void set_xf(int rtmode) { inRT = rtmode; if (rtmode) { OX = 0; OY = 0; SX = S; } else { SX = (float)SCR_W / G.w; OX = 0; OY = (SCR_H - G.h * S) / 2; } } // the 4:3 game is stretched to fill the 16:9 screen
+// Options > display mode (global value 16, like the Android version): 0 = stretch to fill the 16:9 screen, 1 = keep 4:3 with black bars
+static int keep43(void) { return G.ngv > 16 && G.gv[16].t != 2 && vi(&G.gv[16]) == 1; }
+static void set_xf(int rtmode) { inRT = rtmode; if (rtmode) { OX = 0; OY = 0; SX = S; } else if (keep43()) { SX = S; OX = (SCR_W - G.w * S) / 2; OY = (SCR_H - G.h * S) / 2; } else { SX = (float)SCR_W / G.w; OX = 0; OY = (SCR_H - G.h * S) / 2; } }
 static void clip_game(void) { // keep everything inside the 4:3 game area (objects outside the frame must not show in the side bars)
     vita2d_enable_clipping(); vita2d_set_clip_rectangle((int)OX, (int)OY, (int)(OX + G.w * SX + 0.5f), (int)(OY + G.h * S + 0.5f)); }
 static unsigned col(unsigned rgba) { return RGBA8(rgba >> 24, (rgba >> 16) & 255, (rgba >> 8) & 255, rgba & 255); }
@@ -146,11 +148,11 @@ static int audio_thread(SceSize args, void *argp) {
 }
 
 // ---------------- input ----------------
-typedef struct VBtn { unsigned mask; int x, y, slot; const char *obj; int mode; } VBtn; // mode: 0 any, 1 office only, 2 cameras only, 3 cam 11 only
+typedef struct VBtn { unsigned mask; int x, y, slot; const char *obj; int mode; } VBtn; // mode: 0 any, 1 office only, 2 cameras only, 3 cam 11 only, 4 only while obj is visible
 static VBtn vbtn[] = {
     {SCE_CTRL_LTRIGGER | SCE_CTRL_L1, 267, 724, 4, NULL, 0},   // mask bar
     {SCE_CTRL_RTRIGGER | SCE_CTRL_R1, 756, 724, 4, NULL, 0},   // camera bar
-    {SCE_CTRL_SELECT | SCE_CTRL_START, 232, 47, 4, NULL, 0},   // mute call
+    {SCE_CTRL_SELECT | SCE_CTRL_START, 0, 0, 4, "mute call", 4}, // mute call (only while the button is shown, otherwise the tap would turn the office view)
     {SCE_CTRL_TRIANGLE, 233, 595, 7, NULL, 3},                 // wind the music box (cam 11, hold)
     {SCE_CTRL_CROSS, 490, 345, 5, NULL, 1},                    // flashlight down the hall (hold)
     {SCE_CTRL_CROSS, 232, 296, 5, NULL, 2},                    // flashlight on the camera (hold)
@@ -221,8 +223,9 @@ static void read_input(unsigned *prevButtons) {
     for (unsigned i = 0; i < sizeof vbtn / sizeof vbtn[0]; i++) {
         VBtn *v = &vbtn[i]; Touch *t = &G.in.t[v->slot];
         if (pressed & v->mask) {
-            if (G.fi != 3 && v->mode != 0) continue;
+            if (G.fi != 3 && v->mode != 0 && v->mode != 4) continue;
             if ((v->mode == 1 && view != 0) || (v->mode == 2 && view == 0) || (v->mode == 3 && view != 11)) continue;
+            if (v->mode == 4) { Obj *m = find_obj(v->obj); if (!m || m->hidden) continue; }
             int x = v->x, y = v->y; if (v->obj && !obj_screen_pos(v->obj, &x, &y)) continue;
             if (t->down) t->ended = 1; t->down = 1; t->isnew = 1; t->x = x; t->y = y; t->owner = (int)i + 1;
         }

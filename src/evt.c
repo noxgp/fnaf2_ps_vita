@@ -566,7 +566,7 @@ static void exec_act(Evt *a) {
         case 49: { int k = a->p[0].a; const char *s = eval_str(&a->p[1]); if (k >= 0 && k < 10) { free(o->str[k]); o->str[k] = strdup(s); } return; }
         case 57: o->z = ++G.zmax; return;
         case 58: o->z = --G.zmin; return;
-        case 60: { enablePick = 0; Obj *b = cur_objects(a->p[0].s[0], (uint16_t)a->p[0].s[1]); if (b) o->z = b->z + 0.5; return; }
+        case 60: { enablePick = 1; Obj *b = cur_objects(a->p[0].s[0], (uint16_t)a->p[0].s[1]); if (b) { o->z = b->z + 0.5; if (repeatFlag) { a->flags |= 1; actLoop = 1; } } return; } // like the runtime: repeat for every instance of the other object, ending in front of the last
         case 61: { int l = eval_int(&a->p[0]) - 1; if (l >= 0 && l < G.nlayer) { o->layer = l; o->z = ++G.zmax; } return; }
         case 65: { int v = 255 - eval_int(&a->p[0]); if (v < 0) v = 0; if (v > 255) v = 255;
             int rgb = (o->effect & 0x1000) ? (o->effparam & 0xFFFFFF) : 0xFFFFFF; int bop = o->effect & 0xFFF;
