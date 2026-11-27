@@ -292,10 +292,13 @@ void frame_tick(void) {
     }
     if (!G.quit) run_timers();
     if (!G.quit) run_always();
-    if (G.winx != G.lastwinx || G.winy != G.lastwiny) { // objects that don't follow the playfield keep their screen position
-        int dx = G.winx - G.lastwinx, dy = G.winy - G.lastwiny;
-        for (int i = 0; i < G.nobjslots; i++) { Obj *o = G.obj[i]; if (!o || o->dead || !(o->oi->oeflags & 0x800) || o->layer >= G.nlayer) continue;
-            Layer *L = &G.layer[o->layer]; o->x += (int)(dx * L->xc); o->y += (int)(dy * L->yc); }
+    if (G.winx != G.lastwinx || G.winy != G.lastwiny) { // like CRun.f_UpdateWindowPos: object coordinates stay in frame space,
+        int dx = G.winx - G.lastwinx, dy = G.winy - G.lastwiny;    // objects on slower layers (and scroll-independent ones) move along
+        for (int i = 0; i < G.nobjslots; i++) { Obj *o = G.obj[i]; if (!o || o->dead || o->layer >= G.nlayer) continue;
+            if (o->oi->oeflags & 0x800) { o->x += dx; o->y += dy; continue; }
+            Layer *L = &G.layer[o->layer];
+            if (L->opt & 1) o->x += dx + (int)(L->xc * G.lastwinx) - (int)(L->xc * G.winx);
+            if (L->opt & 2) o->y += dy + (int)(L->yc * G.lastwiny) - (int)(L->yc * G.winy); }
         G.lastwinx = G.winx; G.lastwiny = G.winy;
     }
     ext_tick_end();
@@ -361,7 +364,7 @@ void frame_draw(void) {
         }
         for (; k < n && list[k]->layer <= L; k++) {
             Obj *o = list[k]; if (o->layer != L || ly->hidden) continue;
-            int blend; unsigned tint = obj_tint(o, &blend); float x = o->x - ox, y = o->y - oy;
+            int blend; unsigned tint = obj_tint(o, &blend); float x = o->x - G.winx, y = o->y - G.winy; // objects are in frame space
             if (o->type == 2 || (o->type >= 32 && o->oi->ext_kind == XK_KYSO)) { int im = obj_image(o); if (im >= 0) draw_img(im, x, y, o->sx, o->sy, o->angle, tint, blend, 1); }
             else if (o->type >= 32) plat_persp(x, y, o->w, o->h, ext_persp_fb(o));
             else if (o->type == 7 && o->oi->has_cdisp) {

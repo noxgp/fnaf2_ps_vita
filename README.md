@@ -66,6 +66,7 @@ The generated `game` folder contains the game's files. Keep it for yourself and 
 - Options > Display Mode: the 4:3 setting now keeps the original aspect ratio with black borders.
 - Options > Vibrations: rumble on DualShock controllers on PlayStation TV (the handheld Vita has no vibration motor).
 - Options > Joystick Size now also changes how far the arrow buttons push the minigame joystick.
+- Office touch controls: turning left now works anywhere on the left side of the screen (before, after looking right, only the top and bottom of the left side worked).
 - Start/Select only mutes the phone call while the mute button is on screen (it no longer turns the view left).
 - Subtitle text is drawn in front of its dark background again.
 - Mask: Toy Bonnie now stays in the office while you wear the mask (the screen flickers dark) and leaves after a few seconds. Before, he vanished instantly.

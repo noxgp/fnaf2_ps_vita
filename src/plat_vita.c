@@ -182,7 +182,7 @@ static Obj *find_obj(const char *name) {
 static int obj_screen_pos(const char *name, int *x, int *y) {
     Obj *o = find_obj(name); if (!o) return 0;
     int l, t, r, b; obj_rect(o, &l, &t, &r, &b); float xc = o->layer < G.nlayer ? G.layer[o->layer].xc : 1, yc = o->layer < G.nlayer ? G.layer[o->layer].yc : 1;
-    *x = (l + r) / 2 - (int)(G.winx * xc); *y = (t + b) / 2 - (int)(G.winy * yc); return 1;
+    (void)xc; (void)yc; *x = (l + r) / 2 - G.winx; *y = (t + b) / 2 - G.winy; return 1; // objects are in frame space
 }
 static int cam_view(void) { Obj *o = find_obj("viewing"); return (o && o->type == 7 && G.fi == 3) ? vi(&o->cv) : 0; } // 0 = office, else camera number
 // pick the camera button nearest in the pressed direction

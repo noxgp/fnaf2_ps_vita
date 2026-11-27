@@ -252,7 +252,7 @@ static int multivar(MultiVar *m, Obj *o) {
 }
 static int mouse_over(Obj *o) {
     Layer *L = &G.layer[o->layer < G.nlayer ? o->layer : 0];
-    int fx = G.mx + (int)(G.winx * L->xc), fy = G.my + (int)(G.winy * L->yc), l, t, r, b;
+    int fx = G.mx + G.winx, fy = G.my + G.winy, l, t, r, b; (void)L; // objects are in frame space
     obj_rect(o, &l, &t, &r, &b);
     return fx >= l && fx < r && fy >= t && fy < b;
 }

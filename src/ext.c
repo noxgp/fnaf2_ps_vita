@@ -114,7 +114,7 @@ float ext_persp_fb(Obj *o) { Persp *p = o->ext; if (!p) return 0; int d = p->dir
 int touch_over(Obj *o, int ti) {
     if (ti < 0 || ti >= MAXTOUCH || (!G.in.t[ti].down && !G.in.t[ti].isnew)) return 0;
     Layer *L = &G.layer[o->layer < G.nlayer ? o->layer : 0];
-    int fx = G.in.t[ti].x + (int)(G.winx * L->xc), fy = G.in.t[ti].y + (int)(G.winy * L->yc), l, t, r, b;
+    int fx = G.in.t[ti].x + G.winx, fy = G.in.t[ti].y + G.winy, l, t, r, b; (void)L; // objects are in frame space
     obj_rect(o, &l, &t, &r, &b);
     return fx >= l && fx < r && fy >= t && fy < b;
 }
