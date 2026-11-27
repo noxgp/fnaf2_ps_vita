@@ -62,6 +62,13 @@ The generated `game` folder contains the game's files. Keep it for yourself and 
 
 ## Changelog
 
+**v1.0.2**
+- Options > Display Mode: the 4:3 setting now keeps the original aspect ratio with black borders.
+- Options > Vibrations: rumble on DualShock controllers on PlayStation TV (the handheld Vita has no vibration motor).
+- Options > Joystick Size now also changes how far the arrow buttons push the minigame joystick.
+- Start/Select only mutes the phone call while the mute button is on screen (it no longer turns the view left).
+- Subtitle text is drawn in front of its dark background again.
+
 **v1.0.1**
 - Support for FNaF 2 **v2.0.7** (latest Android version). Fixes a black screen with only "No" and the copyright text when the data was built from a 2.0.7 APK.
 - Data Tool detects the APK version: 2.0.7 recommended, 2.0.6 supported, other versions build with a warning.
