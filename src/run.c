@@ -324,18 +324,26 @@ static int zcmp(const void *a, const void *b) {
     if (x->layer != y->layer) return x->layer - y->layer;
     return x->z < y->z ? -1 : x->z > y->z;
 }
-// "Ported to PS Vita by Nox" on the title screen: same font, size and colour as the copyright line, centred at the bottom
+// Credit on the title screen, top-right corner: "Ported to PS Vita by Nox" and the update below it,
+// same font, size and colour as the copyright line
+#define CREDIT_UPDATE "Update 2 (v1.0.2)"
 static unsigned obj_tint(Obj *o, int *blend);
 static void draw_credit(void) {
-    static struct Tex *ct; static int cw, ch; Obj *cp = NULL;
+    static const char *lines[2] = {"Ported to PS Vita by Nox", CREDIT_UPDATE};
+    static struct Tex *ct[2]; static int cw[2], ch[2]; Obj *cp = NULL;
     for (int i = 0; i < G.nobjslots; i++) { Obj *o = G.obj[i]; if (o && !o->dead && o->type == 3 && o->oi->name && !strncmp(o->oi->name, "copyright", 9)) cp = o; }
     if (!cp || cp->hidden || !cp->oi->tn) return;
-    if (!ct) { TextDef *td = &cp->oi->texts[0]; const char *t = "Ported to PS Vita by Nox"; int w, h;
-        font_render(G.font[td->font & 63].height, t, 0, 0, 0, 0, &w, &h, 1, 0);
-        uint8_t *px = font_render(G.font[td->font & 63].height, t, w + 4, h, 0, cp->tcolor, &cw, &ch, 0, 0);
-        if (!px) return; ct = tex_make(cw, ch, 0, px, cw * 4); free(px); }
-    int b; unsigned tint = obj_tint(cp, &b); float x = (G.w - cw) / 2.0f, y = cp->y + cp->oi->tcy - 2 * ch - 2 + 0.0f;
-    float xy[8] = {x, y, x + cw, y, x + cw, y + ch, x, y + ch}; plat_quad(ct, 0, 0, 1, 1, xy, tint, 0);
+    TextDef *td = &cp->oi->texts[0]; int fh = G.font[td->font & 63].height;
+    for (int k = 0; k < 2; k++) if (!ct[k]) { int w, h;
+        font_render(fh, lines[k], 0, 0, 0, 0, &w, &h, 1, 0);
+        uint8_t *px = font_render(fh, lines[k], w + 4, h, 0, cp->tcolor, &cw[k], &ch[k], 0, 0);
+        if (!px) return; ct[k] = tex_make(cw[k], ch[k], 0, px, cw[k] * 4); free(px); }
+    int b; unsigned tint = obj_tint(cp, &b); const float margin = 12; float y = margin;
+    for (int k = 0; k < 2; k++) {
+        float x = G.w - margin - cw[k];
+        float xy[8] = {x, y, x + cw[k], y, x + cw[k], y + ch[k], x, y + ch[k]}; plat_quad(ct[k], 0, 0, 1, 1, xy, tint, 0);
+        y += ch[k] + 2;
+    }
 }
 void frame_draw(void) {
     drawFrame++; cache_trim();
